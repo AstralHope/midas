@@ -4,18 +4,14 @@ $file_path = '/data/deskecc/ack/vpcinfo/All_vsw.csv';
 $vsw_data = [];
 $error_msg = '';
 
-// 检查文件是否存在且可读
 if (file_exists($file_path) && is_readable($file_path)) {
     if (($handle = fopen($file_path, "r")) !== FALSE) {
         $is_header = true;
-        // 使用 fgetcsv 逐行安全读取
         while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-            // 跳过第一行表头
             if ($is_header) {
                 $is_header = false;
                 continue;
             }
-            // 确保当前行至少有 4 列数据
             if (count($data) >= 4) {
                 $vsw_data[] = [
                     'id'    => htmlspecialchars($data[0]),
@@ -27,7 +23,7 @@ if (file_exists($file_path) && is_readable($file_path)) {
         }
         fclose($handle);
     } else {
-        $error_msg = "文件存在，但打开失败，请检查 PHP 进程权限。";
+        $error_msg = "文件存在，但打开失败，请检查权限。";
     }
 } else {
     $error_msg = "找不到文件或无读取权限: " . htmlspecialchars($file_path);
@@ -62,11 +58,11 @@ if (file_exists($file_path) && is_readable($file_path)) {
         <div class="search-box">
             <label for="ipInput">输入搜索 IP：</label>
             <input type="text" id="ipInput" class="form-control" style="display:inline-block; width:200px;" placeholder="例如: 10.1.1.5">
-            <button onclick="filterTable()" class="btn btn-primary btn-sm">筛选</button>
+            <button onclick="executeSearch()" class="btn btn-primary btn-sm">筛选</button>
             <button onclick="clearFilter()" class="btn btn-default btn-sm">清除</button>
             
             <?php if (empty($error_msg)): ?>
-                <span class="success-msg">已加载 <?php echo count($vsw_data); ?> 条网段数据</span>
+                <span class="success-msg">已加载 <span id="dataCount"><?php echo count($vsw_data); ?></span> 条网段数据</span>
             <?php endif; ?>
         </div>
 
@@ -80,28 +76,42 @@ if (file_exists($file_path) && is_readable($file_path)) {
                 </tr>
             </thead>
             <tbody id="vswBody">
-                <?php
-                // 2. PHP 渲染：直接将数据循环输出为 HTML 表格行
-                foreach ($vsw_data as $row) {
-                    echo "<tr>";
-                    echo "<td>{$row['id']}</td>";
-                    echo "<td>{$row['name']}</td>";
-                    echo "<td class='cidr-cell'>{$row['cidr']}</td>";
-                    echo "<td>{$row['cloud']}</td>";
-                    echo "</tr>";
-                }
-                ?>
-            </tbody>
+                </tbody>
         </table>
     </div>
 
     <script>
-        // 3. JS 纯前端逻辑
-        
-        // IP 范围重叠匹配逻辑
+        // 【核心优化1】将 PHP 数据一次性转为 JS 全局变量放入内存
+        const globalVswData = <?php echo json_encode($vsw_data, JSON_UNESCAPED_UNICODE); ?> || [];
+        const tbody = document.getElementById("vswBody");
+        const countSpan = document.getElementById("dataCount");
+
+        // 页面加载完毕后，立刻渲染全量数据
+        window.onload = function() {
+            renderTable(globalVswData);
+        };
+
+        // 高效渲染表格视图 (只做一次 DOM 写入)
+        function renderTable(dataArray) {
+            // 使用数组拼接字符串，比逐个创建 DOM 节点快得多
+            let htmlContent = "";
+            for (let i = 0; i < dataArray.length; i++) {
+                const row = dataArray[i];
+                htmlContent += `<tr>
+                    <td>${row.id}</td>
+                    <td>${row.name}</td>
+                    <td>${row.cidr}</td>
+                    <td>${row.cloud}</td>
+                </tr>`;
+            }
+            // 一次性刷新 DOM
+            tbody.innerHTML = htmlContent;
+            countSpan.innerText = dataArray.length;
+        }
+
+        // IP 范围重叠计算 (保持不变)
         function isIpRangeOverlap(inputIpStr, cidr) {
             try {
-                // 将用户输入的模糊 IP 转为范围 (Min - Max)
                 const parts = inputIpStr.split('.').filter(p => p.trim() !== '');
                 if (parts.length === 0) return false;
 
@@ -122,7 +132,6 @@ if (file_exists($file_path) && is_readable($file_path)) {
                 const inputMin = ipToBigInt(minParts);
                 const inputMax = ipToBigInt(maxParts);
 
-                // 将目标 CIDR 网段转为范围 (Min - Max)
                 const [range, bits = 32] = cidr.split('/');
                 const rangeInt = ipToBigInt(range.split('.').map(Number));
                 const shift = BigInt(32 - bits);
@@ -133,69 +142,66 @@ if (file_exists($file_path) && is_readable($file_path)) {
                 const cidrMin = rangeInt & netMask;
                 const cidrMax = cidrMin | invMask;
 
-                // 判断两个范围是否有交集
                 return inputMin <= cidrMax && inputMax >= cidrMin;
             } catch (e) {
                 return false;
             }
         }
 
-        // 表格筛选主函数
-        function filterTable() {
-            const keyword = document.getElementById("ipInput").value.trim();
-            const rows = document.getElementById("vswBody").getElementsByTagName("tr");
+        // 【核心优化2】在内存中过滤 JSON 数据，而不是操作 DOM
+        function executeSearch() {
+            const keyword = document.getElementById("ipInput").value.trim().toLowerCase();
             
-            // 判断是否是纯数字+点组成的 IP 格式倾向
+            if (keyword === "") {
+                renderTable(globalVswData);
+                return;
+            }
+
             const isIpLike = /^[0-9\.]+$/.test(keyword);
-
-            for (let row of rows) {
-                const cells = row.getElementsByTagName("td");
-                const instanceId = cells[0].innerText;
-                const instanceName = cells[1].innerText;
-                const cidrCell = cells[2].innerText;
-                const cloudId = cells[3].innerText;
-
+            
+            // 使用 Array.filter 高效过滤出符合条件的数据
+            const filteredData = globalVswData.filter(row => {
                 let isMatch = false;
 
-                if (keyword === "") {
-                    isMatch = true; 
-                } 
-                else if (isIpLike) {
-                    const cidrs = cidrCell.split(/[\s,，]+/).filter(c => c.length > 0);
+                if (isIpLike) {
+                    const cidrs = row.cidr.split(/[\s,，]+/).filter(c => c.length > 0);
                     for (let cidr of cidrs) {
                         if (isIpRangeOverlap(keyword, cidr)) {
-                            isMatch = true;
-                            break;
+                            return true;
                         }
                     }
-                } 
+                }
                 
-                // 降级策略：纯文本模糊搜索
-                if (!isMatch) {
-                    const rowText = `${instanceId} ${instanceName} ${cidrCell} ${cloudId}`.toLowerCase();
-                    if (rowText.includes(keyword.toLowerCase())) {
-                        isMatch = true;
-                    }
+                // 降级文本模糊搜索
+                const rowText = `${row.id} ${row.name} ${row.cidr} ${row.cloud}`.toLowerCase();
+                if (rowText.includes(keyword)) {
+                    return true;
                 }
 
-                row.style.display = isMatch ? "" : "none";
-            }
+                return false;
+            });
+
+            // 将过滤后的结果重新渲染
+            renderTable(filteredData);
         }
 
-        // 清除筛选
         function clearFilter() {
-            const rows = document.getElementById("vswBody").getElementsByTagName("tr");
-            for (let row of rows) {
-                row.style.display = "";
-            }
             document.getElementById("ipInput").value = "";
+            renderTable(globalVswData); // 恢复全量数据
         }
 
-        // 监听回车键事件，按下回车直接搜索
+        // 【核心优化3】防抖机制：避免快速连敲键盘时频繁触发计算
+        let searchTimeout;
         document.getElementById("ipInput").addEventListener("keyup", function(event) {
             if (event.key === "Enter") {
-                event.preventDefault(); 
-                filterTable();
+                clearTimeout(searchTimeout);
+                executeSearch();
+            } else {
+                // 如果用户连续输入，则取消上一次的任务，重新倒计时 300ms
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    executeSearch();
+                }, 300); 
             }
         });
     </script>
