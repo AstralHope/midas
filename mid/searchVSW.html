@@ -45,7 +45,7 @@
         $(document).ready(function() {
             fetch('/data/deskecc/ack/vpcinfo/All_vsw.csv')
                 .then(response => {
-                    if (!response.ok) throw new Error('无法加载 CSV 文件，请检查路径 /data/All_vsw.csv');
+                    if (!response.ok) throw new Error('无法加载 CSV 文件，请检查路径 /data/deskecc/ack/vpcinfo/All_vsw.csv');
                     return response.text();
                 })
                 .then(csvData => {
