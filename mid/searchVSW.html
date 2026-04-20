@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIDAS - 交换机网段查询</title>
+    <link rel="stylesheet" href="js/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/main.css">
+    <script src="js/jquery-1.12.4.min.js"></script>
+    <style>
+        .loading-text { color: #888; font-style: italic; }
+        .search-box { margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>全网交换机网段检索 (MIDAS)</h2>
+        
+        <div class="search-box">
+            <label for="ipInput">输入搜索 IP：</label>
+            <input type="text" id="ipInput" class="form-control" style="display:inline-block; width:200px;" placeholder="例如: 10.1.1.5">
+            <button onclick="filterTable()" class="btn btn-primary btn-sm">筛选</button>
+            <button onclick="clearFilter()" class="btn btn-default btn-sm">清除</button>
+            <span id="statusLabel" class="loading-text" style="margin-left: 10px;">正在加载数据...</span>
+        </div>
+
+        <table id="vswTable" class="table table-striped table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>实例ID</th>
+                    <th>实例名称</th>
+                    <th>IPv4网段</th>
+                    <th>云标识</th>
+                </tr>
+            </thead>
+            <tbody id="vswBody">
+                </tbody>
+        </table>
+    </div>
+
+    <script>
+        // 1. 页面加载完成后自动获取 CSV 数据
+        $(document).ready(function() {
+            fetch('/data/deskecc/ack/vpcinfo/All_vsw.csv')
+                .then(response => {
+                    if (!response.ok) throw new Error('无法加载 CSV 文件，请检查路径 /data/All_vsw.csv');
+                    return response.text();
+                })
+                .then(csvData => {
+                    parseAndFillTable(csvData);
+                    $("#statusLabel").text("数据加载完成");
+                })
+                .catch(err => {
+                    $("#statusLabel").text("错误: " + err.message).css("color", "red");
+                });
+        });
+
+        // 2. 解析 CSV 并填充表格
+        function parseAndFillTable(csvText) {
+            const lines = csvText.split(/\r?\n/);
+            const body = document.getElementById("vswBody");
+            body.innerHTML = ""; 
+
+            // 从第 2 行开始处理 (跳过表头)
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                
+                // 简单的 CSV 分隔逻辑（处理逗号分隔）
+                const cols = lines[i].split(',');
+                if (cols.length >= 4) {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${cols[0]}</td>
+                        <td>${cols[1]}</td>
+                        <td>${cols[2]}</td>
+                        <td>${cols[3]}</td>
+                    `;
+                    body.appendChild(row);
+                }
+            }
+        }
+
+        // 3. IP 匹配逻辑 (核心)
+        function isIPInCIDR(ip, cidr) {
+            try {
+                const [range, bits = 32] = cidr.split('/');
+                const mask = (1n << 32n) - (1n << BigInt(32 - bits));
+                
+                const ipToBigInt = str => str.split('.').reduce((acc, part) => (acc * 256n) + BigInt(part), 0n);
+                
+                const ipInt = ipToBigInt(ip);
+                const rangeInt = ipToBigInt(range);
+                
+                return (ipInt & mask) === (rangeInt & mask);
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function filterTable() {
+            const ip = document.getElementById("ipInput").value.trim();
+            const ipRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
+            
+            if (!ipRegex.test(ip)) {
+                alert("请输入有效的 IPv4 地址");
+                return;
+            }
+
+            const rows = document.getElementById("vswBody").getElementsByTagName("tr");
+            for (let row of rows) {
+                const cidrCell = row.getElementsByTagName("td")[2].innerText;
+                // 支持一个单元格内有多个网段（逗号或空格分隔）
+                const cidrs = cidrCell.split(/[\s,，]+/).filter(c => c.length > 0);
+                
+                let isMatch = false;
+                for (let cidr of cidrs) {
+                    if (isIPInCIDR(ip, cidr)) {
+                        isMatch = true;
+                        break;
+                    }
+                }
+                row.style.display = isMatch ? "" : "none";
+            }
+        }
+
+        function clearFilter() {
+            const rows = document.getElementById("vswBody").getElementsByTagName("tr");
+            for (let row of rows) {
+                row.style.display = "";
+            }
+            document.getElementById("ipInput").value = "";
+        }
+    </script>
+</body>
+</html>

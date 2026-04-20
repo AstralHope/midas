@@ -7,7 +7,7 @@
 FROM debian:bookworm-slim AS builder
 
 # 设置 NGINX 版本，方便后续更新
-ENV NGINX_VERSION 1.28.0
+ENV NGINX_VERSION 1.30.0
 # 设置编译参数，可以根据需要自行增减模块
 # --with-http_ssl_module 是为了支持 HTTPS
 # --with-http_v2_module 是为了支持 HTTP/2
@@ -28,7 +28,7 @@ ENV CONFIG_ARGS "\
     --with-http_realip_module \
     --with-stream \
     --with-http_sub_module \
-    --add-module=../nginx-module-vts-0.2.4 \
+    --add-module=../nginx-module-vts-0.2.5 \
     "
 
 # 安装编译所需的依赖包
@@ -51,8 +51,8 @@ RUN cd /tmp && \
     mkdir -p /usr/nginx/conf/stream.d 
 RUN wget "http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" && \
     tar -zxvf nginx-${NGINX_VERSION}.tar.gz && \
-    wget "https://github.com/vozlt/nginx-module-vts/archive/refs/tags/v0.2.4.tar.gz" && \
-    tar -zxvf v0.2.4.tar.gz && \
+    wget "https://github.com/vozlt/nginx-module-vts/archive/refs/tags/v0.2.5.tar.gz" && \
+    tar -zxvf v0.2.5.tar.gz && \
     cd nginx-${NGINX_VERSION} && \
     ./configure ${CONFIG_ARGS} && \
     make -j$(nproc) && \

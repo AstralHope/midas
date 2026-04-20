@@ -73,18 +73,28 @@
                     </form>
                 </li>
             </ul>
+            <ul class="level02">
+                <li>
+                    <form action="display_csv_new.php" method="POST" target="main_frame">
+                        <input type="hidden" name="file" value="/data/deskecc/nginx/Tomcat.csv">
+                            <i class="iconfont icon-previewright"></i><span>Tomcat信息</span>
+                        </button>
+                    </form>
+                </li>
+            </ul>
 
             <div class="level01"><a href="#"><i class="iconfont icon-key"></i><span>小工具</span><b
                         class="iconfont icon-arrowdownl"></b></a></div>
             <ul class="level02">
-                <li><a href="vpcinfo.php" target="main_frame"><i class="iconfont icon-search"></i><span>网段搜索</span></a></li>
+                <!-- <li><a href="vpcinfo.php" target="main_frame"><i class="iconfont icon-search"></i><span>网段搜索</span></a></li> -->
+                <li><a href="searchVSW.html" target="main_frame"><i class="iconfont icon-search"></i><span>网段搜索</span></a></li>
                 <li><a  href="./jstack-review/index.html" target="_blank"><i class="iconfont icon-system1"></i><span>JavaCore</span></a></li>
             </ul>
 
             <!-- <div class="level01"><a href="searchIP.html" target="main_frame"><i class="iconfont icon-comment"></i><span>小工具</span></a></div> -->
             <div class="level01"><a  href="user.html" target="main_frame"><i class="iconfont icon-user"></i><span>用户中心</span></a></div>
         </div>
-        <div class="version">v1.3.0(20251027)</div>
+        <div class="version">v1.4.0(20260420)</div>
     </div>
 
     <div class="header_bar">        
@@ -186,7 +196,7 @@
         // 确保在 DOM 完全加载后再调用函数
         document.addEventListener('DOMContentLoaded', function() {
             // 📢 调用函数，传入你的具体参数
-            setDynamicPortLink('vtsStatusLink', 18088, '/vts_status');
+            setDynamicPortLink('vtsStatusLink', 19913, '/nginx_status');
 
             // 如果将来需要添加其他链接，只需再次调用即可：
             // setDynamicPortLink('otherLink', 9090, '/admin_panel'); 

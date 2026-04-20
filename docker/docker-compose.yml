@@ -18,7 +18,7 @@ services:
   # ----------------- Nginx 服务 -----------------
   web:
     # 引用事先编译并导入的 Nginx 镜像名称
-    image: midas-nginx:1.28.0 
+    image: midas-nginx:1.30.0
     container_name: midas_nginx_web
     pull_policy: never
     # 映射主机 8080 端口到容器 Nginx 监听的 8088 端口
