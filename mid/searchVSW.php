@@ -52,7 +52,7 @@ if (file_exists($file_path) && is_readable($file_path)) {
 </head>
 <body>
     <div class="container">
-        <h2>全网交换机网段检索 (MIDAS)</h2>
+        <h2>输入云上IP匹配VSW信息</h2>
         
         <?php if (!empty($error_msg)): ?>
             <div class="alert alert-danger error-msg">
@@ -67,7 +67,7 @@ if (file_exists($file_path) && is_readable($file_path)) {
             <button onclick="clearFilter()" class="btn btn-default btn-sm">清除</button>
             
             <?php if (empty($error_msg)): ?>
-                <span class="success-msg">已加载 <?php echo count($vsw_data); ?> 条网段数据 (直读容器本地)</span>
+                <span class="success-msg">共 <?php echo count($vsw_data); ?> 条网段数据 </span>
             <?php endif; ?>
         </div>
 
