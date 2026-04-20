@@ -52,7 +52,6 @@ if (file_exists($file_path) && is_readable($file_path)) {
 </head>
 <body>
     <div class="container">
-        <h2>输入云上IP匹配VSW信息</h2>
         
         <?php if (!empty($error_msg)): ?>
             <div class="alert alert-danger error-msg">
@@ -67,7 +66,7 @@ if (file_exists($file_path) && is_readable($file_path)) {
             <button onclick="clearFilter()" class="btn btn-default btn-sm">清除</button>
             
             <?php if (empty($error_msg)): ?>
-                <span class="success-msg">共 <?php echo count($vsw_data); ?> 条网段数据 </span>
+                <span class="success-msg">已加载 <?php echo count($vsw_data); ?> 条网段数据</span>
             <?php endif; ?>
         </div>
 
@@ -97,55 +96,93 @@ if (file_exists($file_path) && is_readable($file_path)) {
     </div>
 
     <script>
-        // 3. JS 纯前端逻辑：只负责 IP 计算和过滤显示
+        // 3. JS 纯前端逻辑
         
-        // IP 匹配逻辑 (使用 BigInt 防止 32位 整数溢出)
-        function isIPInCIDR(ip, cidr) {
+        // IP 范围重叠匹配逻辑
+        function isIpRangeOverlap(inputIpStr, cidr) {
             try {
-                const parts = cidr.split('/');
-                const range = parts[0];
-                const bits = parts[1] ? parseInt(parts[1]) : 32;
+                // 将用户输入的模糊 IP 转为范围 (Min - Max)
+                const parts = inputIpStr.split('.').filter(p => p.trim() !== '');
+                if (parts.length === 0) return false;
+
+                let minParts = [], maxParts = [];
+                for (let i = 0; i < 4; i++) {
+                    if (i < parts.length) {
+                        let num = parseInt(parts[i]);
+                        if (isNaN(num)) return false; 
+                        minParts.push(num);
+                        maxParts.push(num);
+                    } else {
+                        minParts.push(0);
+                        maxParts.push(255);
+                    }
+                }
+
+                const ipToBigInt = arr => arr.reduce((acc, part) => (acc * 256n) + BigInt(part), 0n);
+                const inputMin = ipToBigInt(minParts);
+                const inputMax = ipToBigInt(maxParts);
+
+                // 将目标 CIDR 网段转为范围 (Min - Max)
+                const [range, bits = 32] = cidr.split('/');
+                const rangeInt = ipToBigInt(range.split('.').map(Number));
+                const shift = BigInt(32 - bits);
                 
-                const mask = (1n << 32n) - (1n << BigInt(32 - bits));
-                const ipToBigInt = str => str.split('.').reduce((acc, part) => (acc * 256n) + BigInt(part), 0n);
-                
-                const ipInt = ipToBigInt(ip);
-                const rangeInt = ipToBigInt(range);
-                
-                return (ipInt & mask) === (rangeInt & mask);
+                const invMask = (1n << shift) - 1n;
+                const netMask = ((1n << 32n) - 1n) ^ invMask; 
+
+                const cidrMin = rangeInt & netMask;
+                const cidrMax = cidrMin | invMask;
+
+                // 判断两个范围是否有交集
+                return inputMin <= cidrMax && inputMax >= cidrMin;
             } catch (e) {
                 return false;
             }
         }
 
+        // 表格筛选主函数
         function filterTable() {
-            const ip = document.getElementById("ipInput").value.trim();
-            const ipRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
-            
-            if (!ipRegex.test(ip)) {
-                alert("请输入有效的 IPv4 地址");
-                return;
-            }
-
+            const keyword = document.getElementById("ipInput").value.trim();
             const rows = document.getElementById("vswBody").getElementsByTagName("tr");
+            
+            // 判断是否是纯数字+点组成的 IP 格式倾向
+            const isIpLike = /^[0-9\.]+$/.test(keyword);
+
             for (let row of rows) {
-                // 读取带 'cidr-cell' class 的单元格内容
-                const cidrCell = row.querySelector('.cidr-cell').innerText;
-                // 支持一个单元格内有多个网段（逗号或空格分隔）
-                const cidrs = cidrCell.split(/[\s,，]+/).filter(c => c.length > 0);
-                
+                const cells = row.getElementsByTagName("td");
+                const instanceId = cells[0].innerText;
+                const instanceName = cells[1].innerText;
+                const cidrCell = cells[2].innerText;
+                const cloudId = cells[3].innerText;
+
                 let isMatch = false;
-                for (let cidr of cidrs) {
-                    if (isIPInCIDR(ip, cidr)) {
+
+                if (keyword === "") {
+                    isMatch = true; 
+                } 
+                else if (isIpLike) {
+                    const cidrs = cidrCell.split(/[\s,，]+/).filter(c => c.length > 0);
+                    for (let cidr of cidrs) {
+                        if (isIpRangeOverlap(keyword, cidr)) {
+                            isMatch = true;
+                            break;
+                        }
+                    }
+                } 
+                
+                // 降级策略：纯文本模糊搜索
+                if (!isMatch) {
+                    const rowText = `${instanceId} ${instanceName} ${cidrCell} ${cloudId}`.toLowerCase();
+                    if (rowText.includes(keyword.toLowerCase())) {
                         isMatch = true;
-                        break;
                     }
                 }
-                // 匹配则显示，不匹配则隐藏
+
                 row.style.display = isMatch ? "" : "none";
             }
         }
 
+        // 清除筛选
         function clearFilter() {
             const rows = document.getElementById("vswBody").getElementsByTagName("tr");
             for (let row of rows) {
@@ -154,9 +191,10 @@ if (file_exists($file_path) && is_readable($file_path)) {
             document.getElementById("ipInput").value = "";
         }
 
-        // 监听回车键，按下回车直接搜索
+        // 监听回车键事件，按下回车直接搜索
         document.getElementById("ipInput").addEventListener("keyup", function(event) {
             if (event.key === "Enter") {
+                event.preventDefault(); 
                 filterTable();
             }
         });
