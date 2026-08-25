@@ -23,9 +23,7 @@
 
 ### 1. 登录与安全鉴权
 * **统一会话拦截**：全局接入 Session 鉴权，支持未登录自动跳出 iframe 框架重定向至登录页。
-* **默认固定账号**：
-  * 用户名：`midadmin`
-  * 密　码：`uspOB%0331`
+* **账号鉴权机制**：支持由管理员统一配置初始账号与密码进行安全登录。
 * **双模式认证**：同时支持 Web 界面登录和 **HTTP Basic Auth (`curl -u`)**，无缝兼容自动化脚本与 API 请求。
 
 ### 2. 云上信息
@@ -117,7 +115,7 @@ docker compose up -d
 
 ### 3. 访问系统
 * **访问入口**：`http://<宿主机IP>:9019`
-* **默认账号**：用户名 `midadmin`，密码 `uspOB%0331`
+* **账号访问**：使用系统管理员分配的用户名和密码登录
 
 ---
 
@@ -130,12 +128,12 @@ docker compose up -d
 
 ```bash
 # 查看指定节点的 Pod 文本数据
-curl -u midadmin:'uspOB%0331' "http://<宿主机IP>:9019/view_txt.php?file=cn-shanghai-bocom-d01.12.5.19.187.txt"
+curl -u <username>:'<password>' "http://<宿主机IP>:9019/view_txt.php?file=cn-shanghai-bocom-d01.12.5.19.187.txt"
 
 # 查看 Nginx 配置文件
-curl -u midadmin:'uspOB%0331' "http://<宿主机IP>:9019/view_conf.php?file=221a04004.cloud.a04.am221_12.240.58.234_47488.conf"
+curl -u <username>:'<password>' "http://<宿主机IP>:9019/view_conf.php?file=221a04004.cloud.a04.am221_12.240.58.234_47488.conf"
 ```
-> **提示**：密码中包含特殊字符 `%`，在 Shell 中建议用单引号将密码或参数整体包裹（如 `'uspOB%0331'`），防止被终端转义。
+> **提示**：若密码中包含特殊字符（如 `%`、`$` 等），在 Shell 中建议用单引号将密码包裹（如 `'<password>'`），防止被终端转义。
 
 ### 2. Python 自动化调用示例
 ```python
@@ -143,7 +141,7 @@ import requests
 
 url = "http://<宿主机IP>:9019/view_txt.php"
 params = {"file": "cn-shanghai-bocom-d01.12.5.19.187.txt"}
-auth = ("midadmin", "uspOB%0331")
+auth = ("<username>", "<password>")
 
 response = requests.get(url, params=params, auth=auth)
 if response.status_code == 200:

@@ -92,7 +92,7 @@ checkAuth();
                 <!-- <li><a href="vpcinfo.php" target="main_frame"><i class="iconfont icon-search"></i><span>网段搜索</span></a></li> -->
                 <li><a href="searchVSW.php" target="main_frame"><i class="iconfont icon-search"></i><span>VSW网段匹配</span></a></li>
                 <li><a href="./jstack-review/index.html" target="_blank"><i class="iconfont icon-system1"></i><span>JavaCore(线程栈)</span></a></li>
-                <li><a href="/jifa/" target="_blank"><i class="iconfont icon-system1"></i><span>Jifa(堆内存分析)</span></a></li>
+                <li><a href="./jifa/" target="_blank"><i class="iconfont icon-system1"></i><span>Jifa(堆内存分析)</span></a></li>
             </ul>
 
             <!-- <div class="level01"><a href="searchIP.html" target="main_frame"><i class="iconfont icon-comment"></i><span>小工具</span></a></div> -->
