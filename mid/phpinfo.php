@@ -1,1 +1,5 @@
-<?php phpinfo(); ?>
+<?php
+require_once __DIR__ . '/auth.php';
+checkAuth();
+phpinfo();
+?>

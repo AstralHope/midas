@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/auth.php';
+checkAuth();
+
 // 1. PHP 后端逻辑：读取并解析 CSV 文件
 $file_path = '/data/deskecc/ack/vpcinfo/All_vsw.csv';
 $vsw_data = [];

@@ -1,3 +1,7 @@
+<?php
+require_once __DIR__ . '/auth.php';
+checkAuth();
+?>
 <link rel="stylesheet" href="css/list.css">
 <?php
 function findMatchingFiles($directory = "/", $pattern = "/.*/") {

@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/auth.php';
+checkAuth();
+
 function displayCsv($filePath, $page = 1, $rowsPerPage = 5) {
     // 检查文件是否存在
     if (!file_exists($filePath) || !is_readable($filePath)) {

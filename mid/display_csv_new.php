@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/auth.php';
+checkAuth();
+
 // ============================================
 // display_csv_new.php
 // 完整版 CSV 显示页面
@@ -131,12 +134,14 @@ function displayCsv($filePath, $extraColumnIndex = null, $extraFunction = null, 
 
         // ===== 排序 =====
         function sortTable(colIndex){
+            if (data.length <= 1) return;
             var rows = data.slice(1);
-            var isNum = !isNaN(data[1][colIndex]);
+            var isNum = data.length > 1 && data[1][colIndex] !== null && data[1][colIndex] !== "" && !isNaN(data[1][colIndex]);
             rows.sort(function(a,b){
-                var v1=a[colIndex],v2=b[colIndex];
-                if(isNum) return sortAscending?v1-v2:v2-v1;
-                else return sortAscending?v1.localeCompare(v2):v2.localeCompare(v1);
+                var v1 = (a[colIndex] !== null && a[colIndex] !== undefined) ? a[colIndex] : "";
+                var v2 = (b[colIndex] !== null && b[colIndex] !== undefined) ? b[colIndex] : "";
+                if(isNum) return sortAscending ? (Number(v1) - Number(v2)) : (Number(v2) - Number(v1));
+                else return sortAscending ? String(v1).localeCompare(String(v2)) : String(v2).localeCompare(String(v1));
             });
             data=[data[0]].concat(rows); sortAscending=!sortAscending; renderTable(currentPage);
         }
@@ -146,7 +151,10 @@ function displayCsv($filePath, $extraColumnIndex = null, $extraFunction = null, 
             var f=document.getElementById("searchInput").value.toLowerCase();
             if(f===""){ data=JSON.parse(JSON.stringify(originalData)); }
             else {
-                data = originalData.filter(function(row,i){ if(i===0) return true; return row.some(c=>c.toLowerCase().includes(f));});
+                data = originalData.filter(function(row,i){
+                    if(i===0) return true;
+                    return row.some(c => c !== null && c !== undefined && String(c).toLowerCase().includes(f));
+                });
             }
             currentPage=1; renderTable(currentPage);
         }

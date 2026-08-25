@@ -1,3 +1,7 @@
+<?php
+require_once __DIR__ . '/auth.php';
+checkAuth();
+?>
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
