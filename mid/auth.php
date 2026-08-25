@@ -3,8 +3,31 @@
 // auth.php - 全局登录鉴权模块
 // ============================================
 
+// 3天免登录时长 (3 * 24 * 60 * 60 = 259200 秒)
+define('AUTH_SESSION_LIFETIME', 259200);
+
 if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.gc_maxlifetime', AUTH_SESSION_LIFETIME);
+    session_set_cookie_params([
+        'lifetime' => AUTH_SESSION_LIFETIME,
+        'path'     => '/',
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
+}
+
+// 检查会话是否已超过3天（主动校验防御）
+if (isset($_SESSION['login_time']) && (time() - $_SESSION['login_time'] > AUTH_SESSION_LIFETIME)) {
+    $_SESSION = [];
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+            $params["path"], $params["domain"],
+            $params["secure"], $params["httponly"]
+        );
+    }
+    session_destroy();
 }
 
 define('AUTH_USERNAME', 'midadmin');
