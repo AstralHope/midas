@@ -26,11 +26,23 @@ if (isset($_GET['file'])) {
     $filename = $_GET['file'];
     $filename = basename($filename);
     $filename = str_replace("/", "", $filename); // 防止路径遍历攻击
+    $target_file = "/data/deskecc/sofamq/clusterinfo/" . $filename;
 
     // 检查文件是否存在
-    if (file_exists("/data/deskecc/sofamq/clusterinfo/" . $filename)) {
-        // 读取文件内容并显示
-        $file_content = file_get_contents("/data/deskecc/sofamq/clusterinfo/" . $filename);
+    if (file_exists($target_file)) {
+        $file_content = file_get_contents($target_file);
+
+        // 如果是 curl 请求或带有 raw=1 参数，直接输出纯文本
+        $isCurl = isset($_SERVER['HTTP_USER_AGENT']) && stripos($_SERVER['HTTP_USER_AGENT'], 'curl') !== false;
+        $isRaw = isset($_GET['raw']) && $_GET['raw'] == '1';
+        $wantsPlain = isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'text/plain') !== false;
+
+        if (($isCurl || $isRaw || $wantsPlain) && !isset($_GET['html'])) {
+            header('Content-Type: text/plain; charset=utf-8');
+            echo $file_content;
+            exit;
+        }
+
         echo "<pre>" . htmlspecialchars($file_content) . "</pre>";
     } else {
         echo "文件不存在";

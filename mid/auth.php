@@ -11,11 +11,50 @@ define('AUTH_USERNAME', 'midadmin');
 define('AUTH_PASSWORD', 'uspOB%0331');
 
 /**
- * 检查当前用户是否已登录
+ * 获取 HTTP Basic 认证凭据（支持 curl -u 等方式）
+ * @return array [username, password]
+ */
+function getBasicAuthCredentials() {
+    // 1. PHP_AUTH_USER / PHP_AUTH_PW (标准 FastCGI / Apache)
+    if (isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])) {
+        return [$_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']];
+    }
+
+    // 2. HTTP_AUTHORIZATION header 或 REDIRECT_HTTP_AUTHORIZATION
+    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? null;
+
+    if (!$authHeader && function_exists('getallheaders')) {
+        $headers = getallheaders();
+        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? null;
+    }
+
+    if ($authHeader && stripos($authHeader, 'Basic ') === 0) {
+        $decoded = base64_decode(trim(substr($authHeader, 6)));
+        if ($decoded !== false && strpos($decoded, ':') !== false) {
+            return explode(':', $decoded, 2);
+        }
+    }
+
+    return [null, null];
+}
+
+/**
+ * 检查当前用户是否已登录（支持 Session 或 HTTP Basic Auth）
  * @return bool
  */
 function isLoggedIn() {
-    return isset($_SESSION['auth_user']) && $_SESSION['auth_user'] === AUTH_USERNAME;
+    // 1. 检查 Session
+    if (isset($_SESSION['auth_user']) && $_SESSION['auth_user'] === AUTH_USERNAME) {
+        return true;
+    }
+
+    // 2. 检查 HTTP Basic Auth（支持 curl -u username:password）
+    [$user, $pass] = getBasicAuthCredentials();
+    if ($user !== null && $user === AUTH_USERNAME && $pass === AUTH_PASSWORD) {
+        return true;
+    }
+
+    return false;
 }
 
 /**
@@ -23,11 +62,17 @@ function isLoggedIn() {
  */
 function checkAuth() {
     if (!isLoggedIn()) {
-        // 如果是 AJAX / API 请求
-        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        [$user, ] = getBasicAuthCredentials();
+        $isCurlOrCli = isset($_SERVER['HTTP_USER_AGENT']) && stripos($_SERVER['HTTP_USER_AGENT'], 'curl') !== false;
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        $isApi = $user !== null || $isCurlOrCli || $isAjax || (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+
+        // 如果是 API / curl / AJAX / 携带了 Basic Auth 头的请求
+        if ($isApi) {
             http_response_code(401);
+            header('WWW-Authenticate: Basic realm="MIDAS API"');
             header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['error' => '未登录或登录已过期']);
+            echo json_encode(['error' => '401 Unauthorized', 'message' => '用户名或密码错误 / 未授权访问'], JSON_UNESCAPED_UNICODE);
             exit;
         }
 

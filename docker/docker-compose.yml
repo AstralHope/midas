@@ -11,29 +11,40 @@ services:
     pull_policy: never
     volumes:
       - ../mid:/usr/nginx/deskecc/mid 
-      - ../deskecc:/data/deskecc
+      - ../data/deskecc:/data/deskecc
+    networks:
+      - midas-network
+
+  # ----------------- Jifa 堆内存/性能分析服务 -----------------
+  jifa:
+    image: jifadocker/jifa-worker:demo
+    container_name: midas_jifa_app
+    restart: unless-stopped
+    volumes:
+      - ../data/jifa:/jifa/data
     networks:
       - midas-network
 
   # ----------------- Nginx 服务 -----------------
   web:
     # 引用事先编译并导入的 Nginx 镜像名称
-    image: midas-nginx:1.30.0
+    image: midas-nginx:1.30.4
     container_name: midas_nginx_web
     pull_policy: never
     # 映射主机 8080 端口到容器 Nginx 监听的 8088 端口
     ports:
-      # 宿主机 9019 -> 容器 9019 (主应用)
+      # 宿主机 9019 -> 容器 9019 (主应用及反向代理)
       - "127.0.0.1:9019:9019" 
       # 宿主机 18088 -> 容器 18088 (监控)
       #- "127.0.0.1:18088:18088"
     volumes:
       - ../mid:/usr/nginx/deskecc/mid
-      - ../deskecc:/data/deskecc
+      - ../data/deskecc:/data/deskecc
       - ./nginx/midas.conf:/usr/nginx/conf/http.d/midas.conf
 
     depends_on:
       - app # 确保 PHP 服务先启动
+      - jifa # 确保 Jifa 服务先启动
     networks:
       - midas-network
 
