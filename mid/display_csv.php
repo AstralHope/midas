@@ -24,9 +24,11 @@ function displayCsv($filePath, $page = 1, $rowsPerPage = 5) {
     $totalRows = count($data);
     $totalPages = ceil($totalRows / $rowsPerPage);
     $offset = ($page - 1) * $rowsPerPage;
+    $mtime = filemtime($filePath);
 
     // 列出当前页的数据
-    $output = '<table border="1">';
+    $output = '<div class="data-time-bar" style="margin: 10px 0 15px 0; padding: 6px 12px; background: #f8f9fa; border-left: 4px solid #1890ff; font-size: 13px; color: #555;"><strong>数据获取时间：</strong><span id="dataFetchTime">--</span></div>';
+    $output .= '<table border="1">';
     for ($i = $offset; $i < $offset + $rowsPerPage && $i < $totalRows; $i++) {
         $output .= '<tr>';
         foreach ($data[$i] as $cell) {
@@ -45,6 +47,21 @@ function displayCsv($filePath, $page = 1, $rowsPerPage = 5) {
         $output .= '<a href="?file=' . urlencode($filePath) . '&page=' . ($page + 1) . '">下一页</a>';
     }
     $output .= '</div>';
+    $output .= '<script>
+    (function() {
+        var mtime = ' . (int)$mtime . ';
+        if (mtime > 0) {
+            var d = new Date(mtime * 1000);
+            var Y = d.getFullYear();
+            var M = String(d.getMonth() + 1).padStart(2, "0");
+            var D = String(d.getDate()).padStart(2, "0");
+            var h = String(d.getHours()).padStart(2, "0");
+            var m = String(d.getMinutes()).padStart(2, "0");
+            var el = document.getElementById("dataFetchTime");
+            if (el) el.textContent = Y + "-" + M + "-" + D + " " + h + ":" + m;
+        }
+    })();
+    </script>';
 
     return $output;
 }

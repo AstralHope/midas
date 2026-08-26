@@ -19,6 +19,20 @@ checkAuth();
 </head>
 <body>
 
+<?php
+$mtime = 0;
+if (isset($_GET['file'])) {
+    $filename = $_GET['file'];
+    $target_file = "/data/deskecc/ack/clusterinfo/" . $filename;
+    if (file_exists($target_file)) {
+        $mtime = filemtime($target_file);
+    }
+}
+?>
+<div class="data-time-bar" style="margin: 10px 0 15px 0; padding: 6px 12px; background: #f8f9fa; border-left: 4px solid #1890ff; font-size: 13px; color: #555;">
+    <strong>数据获取时间：</strong><span id="dataFetchTime">--</span>
+</div>
+
 <input type="text" id="filterInput" placeholder="筛选表格...">
 <button id="filterButton" class="btn btn-default btn-sm">筛选</button>
 <button id="clearButton" class="btn btn-default btn-sm">清除筛选</button>
@@ -28,13 +42,12 @@ checkAuth();
 if (isset($_GET['file'])) {
     // 获取文件名并转义
     $filename = $_GET['file'];
-    //$filename = basename($filename);
-    //$filename = str_replace("/", "", $filename); // 防止路径遍历攻击
+    $target_file = "/data/deskecc/ack/clusterinfo/" . $filename;
 
     // 检查文件是否存在
-    if (file_exists("/data/deskecc/ack/clusterinfo/" . $filename) && (pathinfo($filename, PATHINFO_EXTENSION) === 'txt') || (pathinfo($filename, PATHINFO_EXTENSION) === 'csv') ) {
+    if (file_exists($target_file) && (pathinfo($filename, PATHINFO_EXTENSION) === 'txt' || pathinfo($filename, PATHINFO_EXTENSION) === 'csv')) {
         // 读取文件内容
-        $file_content = file_get_contents("/data/deskecc/ack/clusterinfo/" . $filename);
+        $file_content = file_get_contents($target_file);
         // 将内容按行分割
         $lines = explode("\n", $file_content);
 
@@ -129,6 +142,19 @@ document.addEventListener('DOMContentLoaded', function() {
             tbody.append(...rows);
         });
     });
+
+    // 格式化本地时间（精确到分）
+    var mtime = <?php echo (int)$mtime; ?>;
+    if (mtime > 0) {
+        var d = new Date(mtime * 1000);
+        var Y = d.getFullYear();
+        var M = String(d.getMonth() + 1).padStart(2, "0");
+        var D = String(d.getDate()).padStart(2, "0");
+        var h = String(d.getHours()).padStart(2, "0");
+        var m = String(d.getMinutes()).padStart(2, "0");
+        var el = document.getElementById("dataFetchTime");
+        if (el) el.textContent = Y + "-" + M + "-" + D + " " + h + ":" + m;
+    }
 });
 </script>
 </body>

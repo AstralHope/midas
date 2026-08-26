@@ -32,9 +32,11 @@ function displayCsv($filePath, $extraColumnIndex = null, $extraFunction = null, 
     // 转为 JSON 以便 JS 使用
     $jsonData = json_encode($data);
     $hiddenColumnsArray = array_map('intval', explode(',', $hiddenColumns));
+    $mtime = filemtime($fullFilePath);
 
     // ============ 输出 HTML ==============
     $output = '<div>';
+    $output .= '<div class="data-time-bar" style="margin: 10px 0 15px 0; padding: 6px 12px; background: #f8f9fa; border-left: 4px solid #1890ff; font-size: 13px; color: #555;"><strong>数据获取时间：</strong><span id="dataFetchTime">--</span></div>';
     $output .= '<h1>' . htmlspecialchars($fileName) . '</h1>';
     $output .= '<input type="text" id="searchInput" placeholder="搜索..." onkeydown="if(event.key==\'Enter\') filterTable()" style="margin-right:10px;">';
     $output .= '<button onclick="filterTable()">筛选</button>';
@@ -170,6 +172,19 @@ function displayCsv($filePath, $extraColumnIndex = null, $extraFunction = null, 
             var link = document.createElement("a");
             link.href = URL.createObjectURL(new Blob([csv], {type:"text/csv;charset=utf-8;"}));
             link.download="' . $fileName . '_filtered.csv"; link.click();
+        }
+
+        // 格式化本地时间（精确到分）
+        var mtime = ' . (int)$mtime . ';
+        if (mtime > 0) {
+            var d = new Date(mtime * 1000);
+            var Y = d.getFullYear();
+            var M = String(d.getMonth() + 1).padStart(2, "0");
+            var D = String(d.getDate()).padStart(2, "0");
+            var h = String(d.getHours()).padStart(2, "0");
+            var m = String(d.getMinutes()).padStart(2, "0");
+            var el = document.getElementById("dataFetchTime");
+            if (el) el.textContent = Y + "-" + M + "-" + D + " " + h + ":" + m;
         }
 
         renderTable(currentPage); // 初始渲染

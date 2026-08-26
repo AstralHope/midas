@@ -32,6 +32,7 @@ if (isset($_GET['file'])) {
     // 检查文件是否存在
     if (file_exists($target_file) && ($ext === 'txt' || $ext === 'csv')) {
         $file_content = file_get_contents($target_file);
+        $mtime = filemtime($target_file);
 
         // 如果是 curl 请求或带有 raw=1 参数，直接输出纯文本
         $isCurl = isset($_SERVER['HTTP_USER_AGENT']) && stripos($_SERVER['HTTP_USER_AGENT'], 'curl') !== false;
@@ -44,7 +45,25 @@ if (isset($_GET['file'])) {
             exit;
         }
 
+        echo '<div class="data-time-bar" style="margin: 10px 0 15px 0; padding: 6px 12px; background: #f8f9fa; border-left: 4px solid #1890ff; font-size: 13px; color: #555;">';
+        echo '<strong>数据获取时间：</strong><span id="dataFetchTime">--</span>';
+        echo '</div>';
         echo "<pre>" . htmlspecialchars($file_content) . "</pre>";
+        echo '<script>
+        (function() {
+            var mtime = ' . (int)$mtime . ';
+            if (mtime > 0) {
+                var d = new Date(mtime * 1000);
+                var Y = d.getFullYear();
+                var M = String(d.getMonth() + 1).padStart(2, "0");
+                var D = String(d.getDate()).padStart(2, "0");
+                var h = String(d.getHours()).padStart(2, "0");
+                var m = String(d.getMinutes()).padStart(2, "0");
+                var el = document.getElementById("dataFetchTime");
+                if (el) el.textContent = Y + "-" + M + "-" + D + " " + h + ":" + m;
+            }
+        })();
+        </script>';
     } else {
         echo "文件不存在或不是 .txt/.csv 文件。";
     }
