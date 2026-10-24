@@ -106,7 +106,7 @@ docker build -t midas-nginx:1.30.4 .
 
 # 2. 构建 PHP-FPM 镜像
 cd ../php
-docker build -t midas-php:8.2-fpm .
+docker build -t midas-php:8.2.35-fpm .
 
 # 3. 启动服务
 cd ..

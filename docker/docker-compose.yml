@@ -5,8 +5,8 @@ name: midas
 services:
   # ----------------- PHP-FPM 服务 -----------------
   app:
-    # 引用事先编译并导入的 PHP 镜像名称
-    image: midas-php:8.2-fpm 
+    # 引用事先编译并导入的 PHP 镜像名称（8.2.35-fpm 安全修复版）
+    image: midas-php:8.2.35-fpm 
     container_name: midas_php_app
     pull_policy: never
     volumes:

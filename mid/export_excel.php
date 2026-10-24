@@ -80,32 +80,34 @@ function generateXlsx($rows, $filename = 'export.xlsx') {
         . '</workbook>';
     $zip->addFromString('xl/workbook.xml', $workbook);
 
-    // 5. xl/styles.xml (商务优雅主题：表头深蓝加粗白字，数据行浅灰细边框)
+    // 5. xl/styles.xml (表头纯白加粗黑字居中，细黑边框；数据行浅绿与白色交替斑马纹)
     $styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n"
         . '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
         . '<fonts count="2">'
-        . '<font><name val="微软雅黑"/><sz val="10"/></font>'
-        . '<font><b/><name val="微软雅黑"/><sz val="11"/><color rgb="FFFFFFFF"/></font>'
+        . '<font><name val="微软雅黑"/><sz val="10"/><color rgb="FF000000"/></font>'
+        . '<font><b/><name val="微软雅黑"/><sz val="10"/><color rgb="FF000000"/></font>'
         . '</fonts>'
-        . '<fills count="3">'
+        . '<fills count="4">'
         . '<fill><patternFill patternType="none"/></fill>'
         . '<fill><patternFill patternType="gray125"/></fill>'
-        . '<fill><patternFill patternType="solid"><fgColor rgb="FF1890FF"/></patternFill></fill>'
+        . '<fill><patternFill patternType="solid"><fgColor rgb="FFFFFFFF"/></patternFill></fill>'
+        . '<fill><patternFill patternType="solid"><fgColor rgb="FFD3EAD6"/></patternFill></fill>'
         . '</fills>'
         . '<borders count="2">'
         . '<border><left/><right/><top/><bottom/></border>'
         . '<border>'
-        . '<left style="thin"><color rgb="FFD9D9D9"/></left>'
-        . '<right style="thin"><color rgb="FFD9D9D9"/></right>'
-        . '<top style="thin"><color rgb="FFD9D9D9"/></top>'
-        . '<bottom style="thin"><color rgb="FFD9D9D9"/></bottom>'
+        . '<left style="thin"><color rgb="FF000000"/></left>'
+        . '<right style="thin"><color rgb="FF000000"/></right>'
+        . '<top style="thin"><color rgb="FF000000"/></top>'
+        . '<bottom style="thin"><color rgb="FF000000"/></bottom>'
         . '</border>'
         . '</borders>'
         . '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
-        . '<cellXfs count="3">'
+        . '<cellXfs count="4">'
         . '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1"/>'
         . '<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>'
-        . '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>'
+        . '<xf numFmtId="0" fontId="0" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>'
+        . '<xf numFmtId="0" fontId="0" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>'
         . '</cellXfs>'
         . '</styleSheet>';
     $zip->addFromString('xl/styles.xml', $styles);
@@ -145,8 +147,14 @@ function generateXlsx($rows, $filename = 'export.xlsx') {
     foreach ($rows as $rIdx => $row) {
         $rowNum = $rIdx + 1;
         $isHeader = ($rIdx === 0);
-        $styleId = $isHeader ? 1 : 2;
-        $rowHeight = $isHeader ? 26 : 22;
+        if ($isHeader) {
+            $styleId = 1;
+            $rowHeight = 26;
+        } else {
+            // Excel行号：第2行为偶数(白色)，第3行为奇数(浅绿交替斑马纹)
+            $styleId = ($rowNum % 2 === 0) ? 2 : 3;
+            $rowHeight = 22;
+        }
 
         $sheetXml .= '<row r="' . $rowNum . '" ht="' . $rowHeight . '" customHeight="1">';
         foreach ($row as $cIdx => $val) {

@@ -98,7 +98,7 @@ checkAuth();
             <!-- <div class="level01"><a href="searchIP.html" target="main_frame"><i class="iconfont icon-comment"></i><span>小工具</span></a></div> -->
             <div class="level01"><a  href="user.html" target="main_frame"><i class="iconfont icon-user"></i><span>用户中心</span></a></div>
         </div>
-        <div class="version">1.6.0(20261014)</div>
+        <div class="version">1.6.1(20261024)</div>
     </div>
 
     <div class="header_bar">        
