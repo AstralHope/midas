@@ -31,3 +31,6 @@
 /deskecc/*/*
 !/deskecc/*/
 !/deskecc/
+
+# 数据目录及下面所有文件全部忽略
+/data/
