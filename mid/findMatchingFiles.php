@@ -44,9 +44,9 @@ function findMatchingFiles($directory = "/", $pattern = "/.*/") {
 //$directory = "/data/deskecc/ack/index/";
 //$pattern = "/.*nodes_info\.csv$/";  // 仅匹配以 cluster_info.csv 结尾的文件
 
-// 处理表单提交
-$directory = isset($_POST['directory']) ? $_POST['directory'] : '/data/deskecc/ack/index/';
-$pattern = isset($_POST['pattern']) ? $_POST['pattern'] : '/.*/';
+// 处理表单提交（支持 POST 与 GET）
+$directory = isset($_REQUEST['directory']) ? $_REQUEST['directory'] : '/data/deskecc/ack/index/';
+$pattern = isset($_REQUEST['pattern']) ? $_REQUEST['pattern'] : '/.*/';
 
 
 

@@ -286,11 +286,11 @@ function displayCsv($filePath, $extraColumnIndex = null, $extraFunction = null, 
     return $output;
 }
 
-// =================== 表单提交处理 ===================
-$filePath = isset($_POST['file']) ? $_POST['file'] : '';
-$extraColumnIndex = isset($_POST['columnIndex']) ? $_POST['columnIndex'] : null;
-$extraFunction = isset($_POST['function']) ? $_POST['function'] : null;
-$hiddenColumns = isset($_POST['hiddenClumnIndex']) ? $_POST['hiddenClumnIndex'] : '';
+// =================== 表单提交处理（支持 POST 与 GET） ===================
+$filePath = isset($_REQUEST['file']) ? $_REQUEST['file'] : '';
+$extraColumnIndex = isset($_REQUEST['columnIndex']) ? $_REQUEST['columnIndex'] : null;
+$extraFunction = isset($_REQUEST['function']) ? $_REQUEST['function'] : null;
+$hiddenColumns = isset($_REQUEST['hiddenClumnIndex']) ? $_REQUEST['hiddenClumnIndex'] : '';
 
 if (empty($filePath)) {
     echo '<form method="POST">';

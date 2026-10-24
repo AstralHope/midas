@@ -7,6 +7,13 @@
 define('AUTH_SESSION_LIFETIME', 259200);
 
 if (session_status() === PHP_SESSION_NONE) {
+    // 解决浏览器后退报错 (ERR_CACHE_MISS / 确认重新提交表单):
+    // PHP 默认 session_cache_limiter('nocache') 会下发 Cache-Control: no-store, no-cache，
+    // 导致页面在 POST 提交或 iframe 历史导航中点击浏览器“返回”时报错。
+    // 设置为 'private_no_expire' 允许客户端浏览器保留历史页面缓存，后退无需重新提交且零报错。
+    session_cache_limiter('private_no_expire');
+    session_cache_expire((int)(AUTH_SESSION_LIFETIME / 60));
+
     ini_set('session.gc_maxlifetime', AUTH_SESSION_LIFETIME);
     session_set_cookie_params([
         'lifetime' => AUTH_SESSION_LIFETIME,
