@@ -102,11 +102,11 @@ mkdir -p data/deskecc data/jifa data/batch data/backup
 ```bash
 # 1. 构建 Nginx 镜像
 cd docker/nginx
-docker build -t midas-nginx:1.30.4 .
+docker build -t midas-nginx:1.30.6 .
 
 # 2. 构建 PHP-FPM 镜像
 cd ../php
-docker build -t midas-php:8.2.35-fpm .
+docker build -t midas-php:8.3.36-fpm .
 
 # 3. 启动服务
 cd ..

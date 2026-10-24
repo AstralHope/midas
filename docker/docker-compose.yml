@@ -5,8 +5,8 @@ name: midas
 services:
   # ----------------- PHP-FPM 服务 -----------------
   app:
-    # 引用事先编译并导入的 PHP 镜像名称（8.2.35-fpm 安全修复版）
-    image: midas-php:8.2.35-fpm 
+    # 引用事先编译并导入的 PHP 镜像名称（8.3.36-fpm 安全修复版）
+    image: midas-php:8.3.36-fpm 
     container_name: midas_php_app
     pull_policy: never
     volumes:
@@ -27,8 +27,8 @@ services:
 
   # ----------------- Nginx 服务 -----------------
   web:
-    # 引用事先编译并导入的 Nginx 镜像名称
-    image: midas-nginx:1.30.4
+    # 引用事先编译并导入的 Nginx 镜像名称（升级至 1.30.6）
+    image: midas-nginx:1.30.6
     container_name: midas_nginx_web
     pull_policy: never
     # 映射主机 8080 端口到容器 Nginx 监听的 8088 端口

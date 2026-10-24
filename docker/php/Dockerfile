@@ -1,5 +1,5 @@
-# 核心修复：锁定至修复版本 php:8.2.35-fpm-alpine
-FROM php:8.2.35-fpm-alpine
+# 核心加固：锁定至长期受维护的安全版本 php:8.3.36-fpm-alpine
+FROM php:8.3.36-fpm-alpine
 
 # 安装常用工具和 PHP 扩展，并通过 apk upgrade 修复系统级 CVE 漏洞（如 CVE-2026-109618、CVE-2026-109619）
 # 编译完成后清理 $PHPIZE_DEPS 与 libzip-dev 编译依赖，仅保留运行时 libzip

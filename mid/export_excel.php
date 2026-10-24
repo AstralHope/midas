@@ -80,12 +80,12 @@ function generateXlsx($rows, $filename = 'export.xlsx') {
         . '</workbook>';
     $zip->addFromString('xl/workbook.xml', $workbook);
 
-    // 5. xl/styles.xml (表头纯白加粗黑字居中，细黑边框；数据行浅绿与白色交替斑马纹)
+    // 5. xl/styles.xml (表头纯白加粗黑字居中，细黑边框；数据行浅绿与白色交替斑马纹；Calibri 字体)
     $styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n"
         . '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
         . '<fonts count="2">'
-        . '<font><name val="微软雅黑"/><sz val="10"/><color rgb="FF000000"/></font>'
-        . '<font><b/><name val="微软雅黑"/><sz val="10"/><color rgb="FF000000"/></font>'
+        . '<font><name val="Calibri"/><sz val="11"/><color rgb="FF000000"/></font>'
+        . '<font><b/><name val="Calibri"/><sz val="11"/><color rgb="FF000000"/></font>'
         . '</fonts>'
         . '<fills count="4">'
         . '<fill><patternFill patternType="none"/></fill>'

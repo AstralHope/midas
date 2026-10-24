@@ -7,7 +7,7 @@
 FROM debian:bookworm-slim AS builder
 
 # 设置 NGINX 版本，方便后续更新
-ENV NGINX_VERSION 1.30.4
+ENV NGINX_VERSION 1.30.6
 # 设置编译参数，可以根据需要自行增减模块
 # --with-http_ssl_module 是为了支持 HTTPS
 # --with-http_v2_module 是为了支持 HTTP/2
