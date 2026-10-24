@@ -47,6 +47,9 @@
 ### 4. 运维诊断与小工具
 * **VSW 网段匹配 (`searchVSW.php`)**：
   * 运维网络排查利器。输入任意 IP 地址，自动进行子网掩码计算与网段匹配，精准定位其所属的虚拟交换机（VSW）、所属云、CIDR 网段及具体起止范围。
+* **介质源速览 (`view_repository.php`)**：
+  * 解析介质机前置 URL 与 `tree` 目录树（`data/deskecc/baseinfo/repository.tree`）。
+  * 自动识别目录与文件，文件生成直达下载超链接，支持实时搜索过滤与双视图模式（经典树状图/文件平铺清单）。
 * **JavaCore 性能分析 (`jstack-review/`)**：
   * 集成基于浏览器的 Java 线程堆栈（Thread Dump / JStack）可视化分析工具。
   * 支持线程状态统计、死锁检测、阻塞关系图谱展示，快速定位 CPU 飙高和线程卡死问题。
